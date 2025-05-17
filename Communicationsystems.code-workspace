@@ -1,0 +1,49 @@
+{
+    "folders": [
+        {
+            "path": "Lecture1-Tasks"
+        },
+        {
+            "path": "Lecture2-Semaphor_Notification"
+        },
+        {
+            "path": "Lecture3-Queue"
+        },
+        {
+            "path": "Lecture4-UDP"
+        },
+        {
+            "path": "Lecture5-MQTT"
+        }
+    ],
+    "settings": {
+		"C_Cpp.intelliSenseEngine": "default",
+		"idf.adapterTargetName": "esp32c3",
+		"idf.espIdfPathWin": "C:\\Users\\Philipp\\esp\\v5.3.1\\esp-idf",
+		"idf.pythonInstallPath": "C:\\Users\\Philipp\\.espressif\\tools\\idf-python\\3.11.2\\python.exe",
+		"idf.openOcdConfigs": [
+			"board/esp32c3-builtin.cfg"
+		],
+		"idf.flashType": "UART",
+		"idf.portWin": "COM3",
+		"idf.toolsPathWin": "C:\\Users\\Philipp\\.espressif",
+        "files.associations": {
+            "sdkconfig.h": "c",
+            "esp_random.h": "c",
+            "led_strip.h": "c",
+            "gpio.h": "c",
+            "esp_intr_alloc.h": "c",
+            "freertos.h": "c",
+            "bitset": "c",
+            "algorithm": "c",
+            "format": "c",
+            "string.h": "c",
+            "inttypes.h": "c",
+            "button_task.h": "c",
+            "stdio.h": "c",
+            "packet_sender.h": "c",
+            "button_handler.h": "c",
+            "stdlib.h": "c"
+        }
+    }
+}

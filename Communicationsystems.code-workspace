@@ -14,6 +14,9 @@
         },
         {
             "path": "Lecture5-MQTT"
+        },
+        {
+            "path": "Lecture6-RS-485"
         }
     ],
     "settings": {
@@ -43,7 +46,8 @@
             "stdio.h": "c",
             "packet_sender.h": "c",
             "button_handler.h": "c",
-            "stdlib.h": "c"
+            "stdlib.h": "c",
+            "mqtt_impl.h": "c"
         }
     }
 }

@@ -15,14 +15,6 @@
 #include "packet_sender.h"
 #include "mqtt_impl.h"
 
-/*
-#################################################
-#################################################
-####### This has never been implemented! ########
-#################################################
-#################################################
-*/
-
 #define BUTTON_GPIO_LEFT CONFIG_BUTTON_GPIO_LEFT
 #define BUTTON_GPIO_RIGHT CONFIG_BUTTON_GPIO_RIGHT
 

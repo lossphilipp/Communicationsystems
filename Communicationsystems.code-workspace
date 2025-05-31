@@ -18,6 +18,9 @@
         {
             "path": "Lecture6-RS-485"
         },
+		{
+            "path": "Lecture7-Bluetooth"
+        }
         {
             "path": "Final_Project-HomeAssistant"
         }
@@ -30,6 +33,9 @@
 		"idf.openOcdConfigs": [
 			"board/esp32c3-builtin.cfg"
 		],
+		"idf.customExtraVars": {
+			"IDF_TARGET": "esp32c3"
+		}
 		"idf.flashType": "UART",
 		"idf.portWin": "COM3",
 		"idf.toolsPathWin": "C:\\Users\\Philipp\\.espressif",

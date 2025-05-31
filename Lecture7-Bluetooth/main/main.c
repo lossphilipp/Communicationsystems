@@ -34,8 +34,8 @@ static QueueHandle_t button_queue;
 TaskHandle_t gButtonTask_handle = NULL;
 TaskHandle_t gBluetoothTask_handle = NULL;
 
-uint8_t gLeftButtonstatus = 0;
-uint8_t gRightButtonstatus = 0;
+uint8_t gLeftButtonstatus = BUTTON_RELEASED;
+uint8_t gRightButtonstatus = BUTTON_RELEASED;
 
 typedef struct {
     uint8_t gpio_num;   // GPIO number of the button
@@ -128,7 +128,7 @@ void button_task(void *arguments) {
                 gLeftButtonstatus = event.event; // For Bluetooth task
             } else if (event.gpio_num == BUTTON_GPIO_RIGHT) {
                 button_name = "RIGHT";
-                gLeftButtonstatus = event.event; // For Bluetooth task
+                gRightButtonstatus = event.event; // For Bluetooth task
             } else {
                 ESP_LOGW("BUTTON_TASK", "Unknown GPIO: %d", event.gpio_num);
                 button_name = "UNKNOWN";

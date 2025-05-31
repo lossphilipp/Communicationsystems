@@ -11,6 +11,10 @@ static const char *gDeviceName = "ESP32";
 static const char *gManufacturerName = "lossphilipp";
 static const char *gModelNum = "v0.1";
 
+// ToDo: Cleanup this very dirty hack
+extern uint8_t gLeftButtonstatus;
+extern uint8_t gRightButtonstatus;
+
 static uint8_t gAddrType;
 static uint16_t gConnectionHandle;
 static bool gNotifyState;
@@ -41,8 +45,8 @@ esp_err_t gattCharacteristicAccessButton(uint16_t connHandle, uint16_t attrHandl
     esp_err_t rc = BLE_ATT_ERR_UNLIKELY;
 
     MODLOG_DFLT(INFO, "gattCharacteristicAccess: Button\n connHandle=%d\n attrHandle=%d\n", connHandle, attrHandle);
-    uint8_t button_state = 1; // ToDo: Replace with actual button state retrieval logic 
-    if ((rc = os_mbuf_append(ctxt->om, &button_state, sizeof(button_state))) != ESP_OK) {
+    uint16_t bothButtons = (gLeftButtonstatus << 1) | gRightButtonstatus;
+    if ((rc = os_mbuf_append(ctxt->om, &bothButtons, sizeof(bothButtons))) != ESP_OK) {
         rc = BLE_ATT_ERR_INSUFFICIENT_RES;
     }
     return rc;
@@ -251,7 +255,6 @@ void ble_device_notify(int16_t data) {
     if (!gNotifyState) { // only if notification is on
         return;
     }
-    MODLOG_DFLT(INFO, "Notify\n data=%d", data);
 
     struct os_mbuf* om = ble_hs_mbuf_from_flat(&data, sizeof(data));
     esp_err_t rc = ble_gattc_notify_custom(gConnectionHandle, gButtonValueHandle, om);

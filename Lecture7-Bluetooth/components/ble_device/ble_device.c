@@ -21,7 +21,7 @@ static uint16_t gButtonValueHandle;
 esp_err_t gattCharacteristicAccessDeviceInfo(uint16_t connHandle, uint16_t attrHandle, struct ble_gatt_access_ctxt* ctxt, void* arg) {
     esp_err_t rc = BLE_ATT_ERR_UNLIKELY;
 
-    MODLOG_DFLT(INFO, "gattCharacteristicAccessDeviceInfo; connHandle=%d\n attrHandle=%d\n", connHandle, attrHandle);
+    MODLOG_DFLT(INFO, "gattCharacteristicAccess: DeviceInfo\n connHandle=%d\n attrHandle=%d\n", connHandle, attrHandle);
     uint16_t uuid = ble_uuid_u16(ctxt->chr->uuid);
     if (uuid == GATT_MODEL_NUMBER_UUID) {
         if ((rc = os_mbuf_append(ctxt->om, gModelNum, strlen(gModelNum))) != ESP_OK) {
@@ -39,6 +39,8 @@ esp_err_t gattCharacteristicAccessDeviceInfo(uint16_t connHandle, uint16_t attrH
 
 esp_err_t gattCharacteristicAccessButton(uint16_t connHandle, uint16_t attrHandle, struct ble_gatt_access_ctxt* ctxt, void* arg) {
     esp_err_t rc = BLE_ATT_ERR_UNLIKELY;
+
+    MODLOG_DFLT(INFO, "gattCharacteristicAccess: Button\n connHandle=%d\n attrHandle=%d\n", connHandle, attrHandle);
     uint8_t button_state = 1; // ToDo: Replace with actual button state retrieval logic 
     if ((rc = os_mbuf_append(ctxt->om, &button_state, sizeof(button_state))) != ESP_OK) {
         rc = BLE_ATT_ERR_INSUFFICIENT_RES;
@@ -55,7 +57,7 @@ static const struct ble_gatt_svc_def gGATTServices[] = {
                 .uuid = BLE_UUID128_DECLARE(CATT_CUSTOM_BUTTON_UUID),
                 .access_cb = gattCharacteristicAccessButton,
                 .val_handle = &gButtonValueHandle,
-                .flags = BLE_GATT_CHR_F_NOTIFY, BLE_GATT_CHR_F_READ,
+                .flags = BLE_GATT_CHR_F_NOTIFY | BLE_GATT_CHR_F_READ,
             }, {
                 0, /* No more characteristics in this service */
             },
@@ -118,7 +120,7 @@ int handleGAPEvent(struct ble_gap_event *event, void *arg) {
             break;
 
         case BLE_GAP_EVENT_SUBSCRIBE:
-            MODLOG_DFLT(INFO, "subscribe event; cur_notify=%d\n value handle; val_handle=%d\n", event->subscribe.cur_notify, gButtonValueHandle);
+            MODLOG_DFLT(INFO, "subscribe event\n cur_notify=%d\n val_handle=%d\n", event->subscribe.cur_notify, gButtonValueHandle);
             if (event->subscribe.attr_handle == gButtonValueHandle) {
                 gNotifyState = event->subscribe.cur_notify;
             } else if (event->subscribe.attr_handle != gButtonValueHandle) {
@@ -249,8 +251,9 @@ void ble_device_notify(int16_t data) {
     if (!gNotifyState) { // only if notification is on
         return;
     }
+    MODLOG_DFLT(INFO, "Notify\n data=%d", data);
 
-    struct os_mbuf* om = ble_hs_mbuf_from_flat(data, sizeof(data));
+    struct os_mbuf* om = ble_hs_mbuf_from_flat(&data, sizeof(data));
     esp_err_t rc = ble_gattc_notify_custom(gConnectionHandle, gButtonValueHandle, om);
     assert(rc == 0);
 }

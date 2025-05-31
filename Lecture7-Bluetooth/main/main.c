@@ -32,6 +32,10 @@
 
 static QueueHandle_t button_queue;
 TaskHandle_t gButtonTask_handle = NULL;
+TaskHandle_t gBluetoothTask_handle = NULL;
+
+uint8_t gLeftButtonstatus = 0;
+uint8_t gRightButtonstatus = 0;
 
 typedef struct {
     uint8_t gpio_num;   // GPIO number of the button
@@ -121,8 +125,10 @@ void button_task(void *arguments) {
             const char *button_name;
             if (event.gpio_num == BUTTON_GPIO_LEFT) {
                 button_name = "LEFT";
+                gLeftButtonstatus = event.event; // For Bluetooth task
             } else if (event.gpio_num == BUTTON_GPIO_RIGHT) {
                 button_name = "RIGHT";
+                gLeftButtonstatus = event.event; // For Bluetooth task
             } else {
                 ESP_LOGW("BUTTON_TASK", "Unknown GPIO: %d", event.gpio_num);
                 button_name = "UNKNOWN";
@@ -145,6 +151,17 @@ void button_task(void *arguments) {
     }
 }
 
+void bluetooth_task(void *arguments) {
+    while (true) {
+        // ToDo: This is not working correctly, need to fix
+        uint16_t bothButtons = (gLeftButtonstatus << 1) | gRightButtonstatus;
+        ESP_LOGI("BLUETOOTH_TASK", "Sending button status: %d (Left: %d, Right: %d)", bothButtons, gLeftButtonstatus, gRightButtonstatus);
+        ble_device_notify(bothButtons);
+
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+}
+
 void init_nvs(void) {
     // Initialize NVS partition
     esp_err_t ret = nvs_flash_init();
@@ -164,24 +181,17 @@ void app_main(void)
 
     staticwifi_init();
 
+    ble_device_init();
+    ble_device_start();
+
     xTaskCreate(button_task, "button_task", TASKS_STACKSIZE, NULL, TASKS_PRIORITY, &gButtonTask_handle);
+    xTaskCreate(bluetooth_task, "bluetooth_task", TASKS_STACKSIZE, NULL, TASKS_PRIORITY, &gBluetoothTask_handle);
 
     ESP_LOGI("CONFIGURATION", "Tasks created, start program...");
 
-    // // Prevent app_main from exiting
-    // while (true) {
-    //     vTaskDelay(portMAX_DELAY);
-    // }
-
-    ble_device_init();
-    ble_device_start();
-    int64_t timePrev = 0;
+    // Prevent app_main from exiting
     while (true) {
-        int64_t timeNow = esp_timer_get_time();
-        if (timeNow - timePrev >= 1000000) { // maximum once a second
-            ble_device_notify(45);
-            timePrev = timeNow;
-        }
+        vTaskDelay(portMAX_DELAY);
     }
 
     cleanup_button_config();

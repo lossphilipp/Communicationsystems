@@ -95,7 +95,7 @@ static void cleanup_button_config() {
     gpio_uninstall_isr_service();
 }
 
-static uint64_t htonll(uint64_t value) {
+static uint64_t custom_htonll(uint64_t value) {
     // Convert 64-bit integer to network byte order
     uint32_t high_part = htonl((uint32_t)(value >> 32));
     uint32_t low_part = htonl((uint32_t)(value & 0xFFFFFFFF));
@@ -106,7 +106,7 @@ void build_packet(uint8_t gpio_num, uint8_t event, uint64_t timestamp, uint8_t *
     // ToDo: Packet still not optimized
     packet[0] = gpio_num; // GPIO number (1 byte)
     packet[1] = event;    // Event (1 byte)
-    uint64_t timestamp_network = htonll(timestamp);
+    uint64_t timestamp_network = custom_htonll(timestamp);
 
     memcpy(&packet[2], &timestamp_network, sizeof(timestamp_network));
     *packet_size = 2 + sizeof(timestamp_network);

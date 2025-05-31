@@ -4,6 +4,7 @@
 #include <inttypes.h>
 #include "esp_log.h"
 #include "esp_err.h"
+#include "esp_system.h"
 #include "host/ble_gap.h"
 #include "esp_nimble_hci.h"
 #include "nimble/nimble_port.h"

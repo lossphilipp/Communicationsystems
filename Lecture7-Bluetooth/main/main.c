@@ -14,7 +14,7 @@
 #include "led.h"
 #include "wifi_station.h"
 #include "packet_sender.h"
-// #include "ble_device.h"
+#include "ble_device.h"
 
 #define BUTTON_GPIO_LEFT CONFIG_BUTTON_GPIO_LEFT
 #define BUTTON_GPIO_RIGHT CONFIG_BUTTON_GPIO_RIGHT
@@ -96,7 +96,7 @@ static void cleanup_button_config() {
     gpio_uninstall_isr_service();
 }
 
-static uint64_t htonll(uint64_t value) {
+static uint64_t custom_htonll(uint64_t value) {
     // Convert 64-bit integer to network byte order
     uint32_t high_part = htonl((uint32_t)(value >> 32));
     uint32_t low_part = htonl((uint32_t)(value & 0xFFFFFFFF));
@@ -107,7 +107,7 @@ void build_packet(uint8_t gpio_num, uint8_t event, uint64_t timestamp, uint8_t *
     // ToDo: Packet still not optimized
     packet[0] = gpio_num; // GPIO number (1 byte)
     packet[1] = event;    // Event (1 byte)
-    uint64_t timestamp_network = htonll(timestamp);
+    uint64_t timestamp_network = custom_htonll(timestamp);
 
     memcpy(&packet[2], &timestamp_network, sizeof(timestamp_network));
     *packet_size = 2 + sizeof(timestamp_network);
@@ -168,21 +168,21 @@ void app_main(void)
 
     ESP_LOGI("CONFIGURATION", "Tasks created, start program...");
 
-    // Prevent app_main from exiting
-    while (true) {
-        vTaskDelay(portMAX_DELAY);
-    }
-
-    // ble_device_init();
-    // ble_device_start();
-    // int64_t timePrev = 0;
+    // // Prevent app_main from exiting
     // while (true) {
-    //     int64_t timeNow = esp_timer_get_time();
-    //     if (timeNow - timePrev >= 1000000) { // maximum once a second
-    //         ble_device_notify(45);
-    //         timePrev = timeNow;
-    //     }
+    //     vTaskDelay(portMAX_DELAY);
     // }
+
+    ble_device_init();
+    ble_device_start();
+    int64_t timePrev = 0;
+    while (true) {
+        int64_t timeNow = esp_timer_get_time();
+        if (timeNow - timePrev >= 1000000) { // maximum once a second
+            ble_device_notify(45);
+            timePrev = timeNow;
+        }
+    }
 
     cleanup_button_config();
 }

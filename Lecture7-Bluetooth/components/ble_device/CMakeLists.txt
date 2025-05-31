@@ -1,3 +1,3 @@
 idf_component_register(SRCS "ble_device.c"
-                    INCLUDE_DIRS "include"
-)
+                    PRIV_REQUIRES bt
+                    INCLUDE_DIRS "include")

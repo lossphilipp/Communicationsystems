@@ -11,9 +11,10 @@
 #include "sdkconfig.h"
 #include "esp_timer.h"
 
+#include "led.h"
 #include "wifi_station.h"
 #include "packet_sender.h"
-#include "ble_device.h"
+// #include "ble_device.h"
 
 #define BUTTON_GPIO_LEFT CONFIG_BUTTON_GPIO_LEFT
 #define BUTTON_GPIO_RIGHT CONFIG_BUTTON_GPIO_RIGHT
@@ -162,25 +163,25 @@ void app_main(void)
     create_buttonQueue();
 
     staticwifi_init();
-    ble_device_init();
-    ble_device_start();
 
     xTaskCreate(button_task, "button_task", TASKS_STACKSIZE, NULL, TASKS_PRIORITY, &gButtonTask_handle);
 
     ESP_LOGI("CONFIGURATION", "Tasks created, start program...");
 
-    int64_t timePrev = 0;
+    // Prevent app_main from exiting
     while (true) {
-        int64_t timeNow = esp_timer_get_time();
-        if (timeNow - timePrev >= 1000000) { // maximum once a second
-            ble_device_notify(45);
-            timePrev = timeNow;
-        }
+        vTaskDelay(portMAX_DELAY);
     }
 
-    // Prevent app_main from exiting
+    // ble_device_init();
+    // ble_device_start();
+    // int64_t timePrev = 0;
     // while (true) {
-    //     vTaskDelay(portMAX_DELAY);
+    //     int64_t timeNow = esp_timer_get_time();
+    //     if (timeNow - timePrev >= 1000000) { // maximum once a second
+    //         ble_device_notify(45);
+    //         timePrev = timeNow;
+    //     }
     // }
 
     cleanup_button_config();

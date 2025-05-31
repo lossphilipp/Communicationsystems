@@ -1,5 +1,11 @@
 #include "ble_device.h"
 
+// ########## prototypes ##########
+static void printAddr(const uint8_t* addr);
+static int handleGAPEvent(struct ble_gap_event *event, void *arg);
+static void enableAdvertising(void);
+
+// ########## globals ##########
 static const char *TAG = "BLE_DEVICE";
 static const char *gDeviceName = "ESP32";
 static const char *gManufacturerName = "lossphilipp";
@@ -10,8 +16,7 @@ static uint16_t gConnectionHandle;
 static bool gNotifyState;
 static uint16_t gButtonValueHandle;
 
-// ########## Datagramstructure ##########
-// ToDo: Adjust
+// ########## implementation ##########
 
 esp_err_t gattCharacteristicAccessDeviceInfo(uint16_t connHandle, uint16_t attrHandle, struct ble_gatt_access_ctxt* ctxt, void* arg) {
     esp_err_t rc = BLE_ATT_ERR_UNLIKELY;
@@ -90,42 +95,42 @@ void printAddr(const uint8_t* addr) {
 
 int handleGAPEvent(struct ble_gap_event *event, void *arg) {
     switch (event->type) {
-		case BLE_GAP_EVENT_CONNECT:
-			// A new connection was established or a connection attempt failed
-			MODLOG_DFLT(INFO, "connection %s; status=%d\n", event->connect.status == 0 ? "established" : "failed", event->connect.status);
-			if (event->connect.status != 0) {
-				// Connection failed; resume advertising
-				enableAdvertising();
-			}
-			gConnectionHandle = event->connect.conn_handle;
-			break;
+        case BLE_GAP_EVENT_CONNECT:
+            // A new connection was established or a connection attempt failed
+            MODLOG_DFLT(INFO, "connection %s; status=%d\n", event->connect.status == 0 ? "established" : "failed", event->connect.status);
+            if (event->connect.status != 0) {
+                // Connection failed; resume advertising
+                enableAdvertising();
+            }
+            gConnectionHandle = event->connect.conn_handle;
+            break;
 
-		case BLE_GAP_EVENT_DISCONNECT:
-			MODLOG_DFLT(INFO, "disconnect; reason=%d\n", event->disconnect.reason);
-			gConnectionHandle = 0;
-			// Connection terminated; resume advertising
-			enableAdvertising();
-			break;
+        case BLE_GAP_EVENT_DISCONNECT:
+            MODLOG_DFLT(INFO, "disconnect; reason=%d\n", event->disconnect.reason);
+            gConnectionHandle = 0;
+            // Connection terminated; resume advertising
+            enableAdvertising();
+            break;
 
-		case BLE_GAP_EVENT_ADV_COMPLETE:
-			MODLOG_DFLT(INFO, "adv complete\n");
-			enableAdvertising();
-			break;
+        case BLE_GAP_EVENT_ADV_COMPLETE:
+            MODLOG_DFLT(INFO, "adv complete\n");
+            enableAdvertising();
+            break;
 
-		case BLE_GAP_EVENT_SUBSCRIBE:
-			MODLOG_DFLT(INFO, "subscribe event; cur_notify=%d\n value handle; val_handle=%d\n", event->subscribe.cur_notify, gHeartRateValueHandle);
-			if (event->subscribe.attr_handle == gButtonValueHandle) {
-				gNotifyState = event->subscribe.cur_notify;
-			} else if (event->subscribe.attr_handle != gButtonValueHandle) {
-				gNotifyState = event->subscribe.cur_notify;
-			}
-			ESP_LOGI("BLE_GAP_SUBSCRIBE_EVENT", "conn_handle from subscribe=%d", gConnectionHandle);
-			break;
+        case BLE_GAP_EVENT_SUBSCRIBE:
+            MODLOG_DFLT(INFO, "subscribe event; cur_notify=%d\n value handle; val_handle=%d\n", event->subscribe.cur_notify, gButtonValueHandle);
+            if (event->subscribe.attr_handle == gButtonValueHandle) {
+                gNotifyState = event->subscribe.cur_notify;
+            } else if (event->subscribe.attr_handle != gButtonValueHandle) {
+                gNotifyState = event->subscribe.cur_notify;
+            }
+            ESP_LOGI("BLE_GAP_SUBSCRIBE_EVENT", "conn_handle from subscribe=%d", gConnectionHandle);
+            break;
 
-		case BLE_GAP_EVENT_MTU:
-			MODLOG_DFLT(INFO, "mtu update event; conn_handle=%d mtu=%d\n", event->mtu.conn_handle, event->mtu.value);
-			break;
-	}
+        case BLE_GAP_EVENT_MTU:
+            MODLOG_DFLT(INFO, "mtu update event; conn_handle=%d mtu=%d\n", event->mtu.conn_handle, event->mtu.value);
+            break;
+    }
     return 0;
 }
 
@@ -196,7 +201,7 @@ void onReset(int reason) {
 }
 
 void bleHostTaskMain(void *param) {
-    ESP_LOGI(tag, "BLE Host Task Started");
+    ESP_LOGI(TAG, "BLE Host Task Started");
     nimble_port_run(); // This function will return only when nimble_port_stop() is executed
     nimble_port_freertos_deinit();
 }
@@ -216,28 +221,28 @@ esp_err_t initGATTServer() {
 }
 
 esp_err_t ble_device_init() {
-	esp_err_t rc = ESP_OK;
+    esp_err_t rc = ESP_OK;
     // Initialize NimBLE
     nimble_port_init();
     ble_hs_cfg.sync_cb = onSync;
     ble_hs_cfg.reset_cb = onReset;
 
     if ((rc = initGATTServer()) != ESP_OK) {
-    	return rc;
+        return rc;
     }
     assert(rc == 0);
 
     // Set the default device name; could also be done via sdkconfig
     if ((rc = ble_svc_gap_device_name_set(gDeviceName)) != ESP_OK) {
-    	return rc;
+        return rc;
     }
 
     return ESP_OK;
 }
 
 void ble_device_start() {
-	// Start the task
-	nimble_port_freertos_init(bleHostTaskMain);
+    // Start the task
+    nimble_port_freertos_init(bleHostTaskMain);
 }
 
 void ble_device_notify(int16_t data) {
@@ -245,7 +250,7 @@ void ble_device_notify(int16_t data) {
         return;
     }
 
-    struct os_mbuf* om = ble_hs_mbuf_from_flat(hrm, sizeof(hrm));
+    struct os_mbuf* om = ble_hs_mbuf_from_flat(data, sizeof(data));
     esp_err_t rc = ble_gattc_notify_custom(gConnectionHandle, gButtonValueHandle, om);
     assert(rc == 0);
 }

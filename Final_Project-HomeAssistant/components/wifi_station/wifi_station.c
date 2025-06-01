@@ -12,9 +12,9 @@ static void on_wifi_disconnect(void *arg, esp_event_base_t event_base, int32_t e
 static void on_got_ip(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 
 esp_err_t staticwifi_init() {
-	ESP_LOGI(TAG, "Setting up static WIFI");
-	ESP_ERROR_CHECK(esp_netif_init());
-	ESP_ERROR_CHECK(esp_event_loop_create_default());
+    ESP_LOGI(TAG, "Setting up static WIFI");
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     gpNetIF = wifi_start();
 
@@ -61,9 +61,9 @@ esp_netif_t *wifi_start() {
 }
 
 static void wifi_stop(void) {
-	if (gpNetIF == NULL) {
-		return;
-	}
+    if (gpNetIF == NULL) {
+        return;
+    }
     ESP_ERROR_CHECK(esp_event_handler_unregister(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &on_wifi_disconnect));
     ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &on_got_ip));
     esp_err_t err = esp_wifi_stop();

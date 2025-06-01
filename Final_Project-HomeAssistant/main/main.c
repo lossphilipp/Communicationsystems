@@ -11,6 +11,7 @@
 #include "sdkconfig.h"
 #include "esp_timer.h"
 
+#include "led.h"
 #include "wifi_station.h"
 #include "packet_sender.h"
 #include "mqtt_impl.h"
@@ -139,8 +140,9 @@ void button_task(void *arguments) {
             packetsender_sendUDP(CONFIG_IPV4_ADDR, CONFIG_PORT, (uint8_t*)buf, packet_size);
             #elif CONFIG_TRANSPORT_TCP
             packetsender_sendTCP(CONFIG_IPV4_ADDR, CONFIG_PORT, (uint8_t*)buf, packet_size);
-            #endif
+            #elif CONFIG_TRANSPORT_MQTT
             sendpacket_sendMQTT((uint8_t*)buf, packet_size);
+            #endif
         }
     }
 }
@@ -163,6 +165,7 @@ void app_main(void)
     create_buttonQueue();
 
     staticwifi_init();
+    mqtt_init();
 
     xTaskCreate(button_task, "button_task", TASKS_STACKSIZE, NULL, TASKS_PRIORITY, &gButtonTask_handle);
 

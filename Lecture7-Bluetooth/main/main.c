@@ -109,7 +109,7 @@ void button_task(void *arguments) {
                 ESP_LOGW("BUTTON_TASK", "Unknown GPIO: %d", event.gpio_num);
             }
 
-            uint16_t bothButtons = (gLeftButtonstatus << 1) | gRightButtonstatus;
+            uint16_t bothButtons = gLeftButtonstatus | (gRightButtonstatus << 8);
             ESP_LOGI("BLUETOOTH_TASK", "Sending button status: %d (Left: %d, Right: %d)", bothButtons, gLeftButtonstatus, gRightButtonstatus);
             ble_device_notify(bothButtons);
         }

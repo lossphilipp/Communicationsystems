@@ -53,20 +53,19 @@ menu "HomeAssistant Configuration"
         int "Button GPIO"
         default 9
         help
-            GPIO the Button is connected to. In the book it is 6, the book development board uses 9
+            GPIO the Button is connected to. In the book it is 6, the book development board uses 9.
 
     config BUTTON_GPIO_RIGHT
         int "Button GPIO"
         default 2
         help
-            GPIO the Button is connected to. The book development board uses 2
+            GPIO the Button is connected to. The book development board uses 2.
 
     config ENABLE_GPIO_PULLDOWN
-        int "Changes PullUp to PullDown"
-        range 0 1
-        default 0
+        bool "Enable GPIO PullDown"
+        default n
         help
-            If the Button should be configured to use PullDown. Uses PullUp otherwise.
+            If the Buttons are configured to use PullDown. Uses PullUp otherwise.
     endmenu
 
     menu "WIFI Configuration"

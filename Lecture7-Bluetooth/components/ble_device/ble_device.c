@@ -45,7 +45,7 @@ esp_err_t gattCharacteristicAccessButton(uint16_t connHandle, uint16_t attrHandl
     esp_err_t rc = BLE_ATT_ERR_UNLIKELY;
 
     MODLOG_DFLT(INFO, "gattCharacteristicAccess: Button\n connHandle=%d\n attrHandle=%d\n", connHandle, attrHandle);
-    uint16_t bothButtons = (gLeftButtonstatus << 1) | gRightButtonstatus;
+    uint16_t bothButtons = gLeftButtonstatus | (gRightButtonstatus << 8);
     if ((rc = os_mbuf_append(ctxt->om, &bothButtons, sizeof(bothButtons))) != ESP_OK) {
         rc = BLE_ATT_ERR_INSUFFICIENT_RES;
     }

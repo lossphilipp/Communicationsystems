@@ -11,9 +11,6 @@
 #include "sdkconfig.h"
 #include "esp_timer.h"
 
-#include "led.h"
-#include "wifi_station.h"
-#include "packet_sender.h"
 #include "ble_device.h"
 
 #define BUTTON_GPIO_LEFT CONFIG_BUTTON_GPIO_LEFT
@@ -32,7 +29,6 @@
 
 static QueueHandle_t button_queue;
 TaskHandle_t gButtonTask_handle = NULL;
-TaskHandle_t gBluetoothTask_handle = NULL;
 
 uint8_t gLeftButtonstatus = BUTTON_RELEASED;
 uint8_t gRightButtonstatus = BUTTON_RELEASED;
@@ -100,65 +96,23 @@ static void cleanup_button_config() {
     gpio_uninstall_isr_service();
 }
 
-static uint64_t custom_htonll(uint64_t value) {
-    // Convert 64-bit integer to network byte order
-    uint32_t high_part = htonl((uint32_t)(value >> 32));
-    uint32_t low_part = htonl((uint32_t)(value & 0xFFFFFFFF));
-    return ((uint64_t)low_part << 32) | high_part;
-}
-
-void build_packet(uint8_t gpio_num, uint8_t event, uint64_t timestamp, uint8_t *packet, size_t *packet_size) {
-    // ToDo: Packet still not optimized
-    packet[0] = gpio_num; // GPIO number (1 byte)
-    packet[1] = event;    // Event (1 byte)
-    uint64_t timestamp_network = custom_htonll(timestamp);
-
-    memcpy(&packet[2], &timestamp_network, sizeof(timestamp_network));
-    *packet_size = 2 + sizeof(timestamp_network);
-}
-
 void button_task(void *arguments) {
     button_event_t event;
 
     while (true) {
         if (xQueueReceive(button_queue, &event, portMAX_DELAY)) {
-            const char *button_name;
             if (event.gpio_num == BUTTON_GPIO_LEFT) {
-                button_name = "LEFT";
                 gLeftButtonstatus = event.event; // For Bluetooth task
             } else if (event.gpio_num == BUTTON_GPIO_RIGHT) {
-                button_name = "RIGHT";
                 gRightButtonstatus = event.event; // For Bluetooth task
             } else {
                 ESP_LOGW("BUTTON_TASK", "Unknown GPIO: %d", event.gpio_num);
-                button_name = "UNKNOWN";
             }
 
-            ESP_LOGI("BUTTON_TASK", "Button event received:\nGPIO=%d (%s), Event=%s, Timestamp=%llu", 
-                event.gpio_num, button_name, event.event == 0 ? "pressed" : "released", event.timestamp
-            );
-
-            uint8_t buf[10];
-            size_t packet_size;
-            build_packet(event.gpio_num, event.event, event.timestamp, buf, &packet_size);
-
-            #if CONFIG_TRANSPORT_UDP
-            packetsender_sendUDP(CONFIG_IPV4_ADDR, CONFIG_PORT, (uint8_t*)buf, packet_size);
-            #elif CONFIG_TRANSPORT_TCP
-            packetsender_sendTCP(CONFIG_IPV4_ADDR, CONFIG_PORT, (uint8_t*)buf, packet_size);
-            #endif
+            uint16_t bothButtons = (gLeftButtonstatus << 1) | gRightButtonstatus;
+            ESP_LOGI("BLUETOOTH_TASK", "Sending button status: %d (Left: %d, Right: %d)", bothButtons, gLeftButtonstatus, gRightButtonstatus);
+            ble_device_notify(bothButtons);
         }
-    }
-}
-
-void bluetooth_task(void *arguments) {
-    while (true) {
-        // ToDo: This is not working correctly, need to fix
-        uint16_t bothButtons = (gLeftButtonstatus << 1) | gRightButtonstatus;
-        ESP_LOGI("BLUETOOTH_TASK", "Sending button status: %d (Left: %d, Right: %d)", bothButtons, gLeftButtonstatus, gRightButtonstatus);
-        ble_device_notify(bothButtons);
-
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
 
@@ -179,13 +133,10 @@ void app_main(void)
     configure_buttons();
     create_buttonQueue();
 
-    staticwifi_init();
-
     ble_device_init();
     ble_device_start();
 
     xTaskCreate(button_task, "button_task", TASKS_STACKSIZE, NULL, TASKS_PRIORITY, &gButtonTask_handle);
-    xTaskCreate(bluetooth_task, "bluetooth_task", TASKS_STACKSIZE, NULL, TASKS_PRIORITY, &gBluetoothTask_handle);
 
     ESP_LOGI("CONFIGURATION", "Tasks created, start program...");
 

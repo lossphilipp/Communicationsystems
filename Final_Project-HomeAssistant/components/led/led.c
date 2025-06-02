@@ -2,6 +2,13 @@
 
 static const char* TAG = "LED";
 
+const colorValues_t color_values[] = {
+    [RED]   = {10,  0,  0},
+    [GREEN] = { 0, 10,  0},
+    [BLUE]  = { 0,  0, 10},
+    [WHITE] = {10, 10, 10}
+};
+
 /* Private variables */
 #ifdef CONFIG_BLINK_LED_STRIP
 static led_strip_handle_t led_strip;

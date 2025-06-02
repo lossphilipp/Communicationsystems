@@ -78,7 +78,7 @@ static void wifi_stop(void) {
 }
 
 void on_wifi_disconnect(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
-    ESP_LOGI(TAG, "Wi-Fi disconnected, trying to reconnect...");
+    ESP_LOGW(TAG, "Wi-Fi disconnected, trying to reconnect...");
     esp_err_t err = esp_wifi_connect();
     if (err == ESP_ERR_WIFI_NOT_STARTED) {
         return;

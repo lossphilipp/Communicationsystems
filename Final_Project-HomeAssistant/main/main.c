@@ -6,95 +6,18 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
-#include "driver/gpio.h"
 #include "esp_log.h"
-#include "sdkconfig.h"
-#include "esp_timer.h"
 
 #include "led.h"
 #include "wifi_station.h"
 #include "packet_sender.h"
 #include "mqtt_impl.h"
-
-#define BUTTON_GPIO_LEFT CONFIG_BUTTON_GPIO_LEFT
-#define BUTTON_GPIO_RIGHT CONFIG_BUTTON_GPIO_RIGHT
+#include "buttons.h"
 
 #define TASKS_STACKSIZE        2048
 #define TASKS_PRIORITY            3
 
-#if CONFIG_ENABLE_GPIO_PULLDOWN
-    #define BUTTON_PRESSED        1
-    #define BUTTON_RELEASED       0
-#else
-    #define BUTTON_PRESSED        0
-    #define BUTTON_RELEASED       1
-#endif
-
-static QueueHandle_t button_queue;
 TaskHandle_t gButtonTask_handle = NULL;
-
-typedef struct {
-    uint8_t gpio_num;   // GPIO number of the button
-    uint8_t event;      // 0 = pressed, 1 = released
-    uint64_t timestamp; // Timestamp in microseconds
-} button_event_t;
-
-/* #################### Buttons #################### */
-void create_buttonQueue() {
-    button_queue = xQueueCreate(10, sizeof(button_event_t));
-    if (button_queue == NULL) {
-        ESP_LOGE("CONFIGURATION", "Failed to create button queue");
-        return;
-    }
-    ESP_LOGI("CONFIGURATION", "Created button queue");
-}
-
-static void IRAM_ATTR gpio_isr_handler(void* arg) {
-    uint32_t gpio_num = (uint32_t) arg;
-    button_event_t event;
-
-    event.gpio_num = gpio_num;
-    event.event = gpio_get_level(gpio_num);
-    event.timestamp = esp_timer_get_time();
-
-    xQueueSendFromISR(button_queue, &event, NULL);
-}
-
-static void configure_buttons() {
-    gpio_config_t gpioConfigIn = {
-        .pin_bit_mask = (1 << BUTTON_GPIO_LEFT) | (1 << BUTTON_GPIO_RIGHT),
-        .mode = GPIO_MODE_INPUT,
-        .pull_up_en = GPIO_PULLUP_ENABLE,
-        .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .intr_type = GPIO_INTR_ANYEDGE
-    };
-    #if CONFIG_ENABLE_GPIO_PULLDOWN
-        gpioConfigIn.pull_up_en = GPIO_PULLUP_DISABLE;
-        gpioConfigIn.pull_down_en = GPIO_PULLDOWN_ENABLE;
-    #endif
-    gpio_config(&gpioConfigIn);
-
-    gpio_install_isr_service(0);
-    esp_err_t err;
-
-    err = gpio_isr_handler_add(BUTTON_GPIO_LEFT, gpio_isr_handler, (void*) BUTTON_GPIO_LEFT);
-    if (err != ESP_OK) {
-        ESP_LOGE("CONFIGURATION", "Failed to add ISR handler for BUTTON_GPIO_LEFT: %s", esp_err_to_name(err));
-    }
-
-    err = gpio_isr_handler_add(BUTTON_GPIO_RIGHT, gpio_isr_handler, (void*) BUTTON_GPIO_RIGHT);
-    if (err != ESP_OK) {
-        ESP_LOGE("CONFIGURATION", "Failed to add ISR handler for BUTTON_GPIO_RIGHT: %s", esp_err_to_name(err));
-    }
-
-    ESP_LOGI("CONFIGURATION", "Buttons configured"); 
-}
-
-static void cleanup_button_config() {
-    gpio_isr_handler_remove(BUTTON_GPIO_LEFT);
-    gpio_isr_handler_remove(BUTTON_GPIO_RIGHT);
-    gpio_uninstall_isr_service();
-}
 
 static uint64_t custom_htonll(uint64_t value) {
     // Convert 64-bit integer to network byte order
@@ -161,9 +84,8 @@ void app_main(void)
 {
     init_nvs();
 
-    configure_buttons();
-    create_buttonQueue();
-
+    led_init();
+    buttons_init();
     staticwifi_init();
     mqtt_init();
 
@@ -176,5 +98,5 @@ void app_main(void)
         vTaskDelay(portMAX_DELAY);
     }
 
-    cleanup_button_config();
+    buttons_cleanup();
 }

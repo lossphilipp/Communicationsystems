@@ -24,12 +24,7 @@ typedef enum {
     COLOR_COUNT
 } color_t;
 
-const colorValues_t color_values[] = {
-    [RED]   = {10,  0,  0},
-    [GREEN] = { 0, 10,  0},
-    [BLUE]  = { 0,  0, 10},
-    [WHITE] = {10, 10, 10}
-};
+extern const colorValues_t color_values[];
 
 void fill_led_strip(uint8_t r, uint8_t g, uint8_t b);
 void fill_led_strip_with_color(color_t color);

@@ -19,7 +19,7 @@ void packetsender_sendTCP(char* hostIP, uint16_t port, uint8_t* payload, uint16_
         ESP_LOGE(TAG, "Socket unable to connect: errno %d", errno);
         return;
     }
-    ESP_LOGI(TAG, "Successfully connected");
+    ESP_LOGD(TAG, "Successfully connected");
 
     err = send(sock, payload, payloadLen, 0);
     if (err < 0) {
@@ -27,7 +27,7 @@ void packetsender_sendTCP(char* hostIP, uint16_t port, uint8_t* payload, uint16_
         return;
     }
 
-    ESP_LOGI(TAG, "Closing socket...");
+    ESP_LOGD(TAG, "Closing socket...");
     shutdown(sock, 0);
     close(sock);
 }
@@ -49,7 +49,7 @@ void packetsender_sendUDP(char* hostIP, uint16_t port, uint8_t* payload, uint16_
         ESP_LOGE(TAG, "Socket unable to connect: errno %d", errno);
         return;
     }
-    ESP_LOGI(TAG, "Successfully connected");
+    ESP_LOGD(TAG, "Successfully connected");
 
     err = send(sock, payload, payloadLen, 0);
     if (err < 0) {
@@ -57,7 +57,7 @@ void packetsender_sendUDP(char* hostIP, uint16_t port, uint8_t* payload, uint16_
         return;
     }
 
-    ESP_LOGI(TAG, "Closing socket...");
+    ESP_LOGD(TAG, "Closing socket...");
     shutdown(sock, 0);
     close(sock);
 }

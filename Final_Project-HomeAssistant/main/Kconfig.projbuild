@@ -149,14 +149,40 @@ menu "HomeAssistant Configuration"
                 Selects the transport layer protocol.
 
             config TRANSPORT_MQTT
-                bool "send over MQTT"
+                bool "MQTT"
 
             config TRANSPORT_UDP
-                bool "send over UDP"
+                bool "UDP"
 
             config TRANSPORT_TCP
-                bool "send over TCP"
+                bool "TCP"
         endchoice
+    endmenu
+
+    menu "MQTT Configuration"
+        config MQTT_BROKER_URL
+            string "MQTT Broker URL"
+            default "mqtt://test.mosquitto.org"
+            help
+            URL of the MQTT Broker used
+            
+        config MQTT_BROKER_USERNAME
+            string "MQTT user name"
+            default ""
+            help
+            User name for MQTT broker login
+
+        config MQTT_BROKER_PASSWORD
+            string "MQTT password"
+            default ""
+            help
+            Password for MQTT broker login
+            
+        config MQTT_TOPIC
+            string "MQTT Topic"
+            default "ESP32/test"
+            help
+            MQTT Topic used to send the data
     endmenu
 
 endmenu

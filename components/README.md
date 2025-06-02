@@ -1,0 +1,1 @@
+This is a collection of all the components developed in the scope of this course. Just copy them over to a project to start using them.

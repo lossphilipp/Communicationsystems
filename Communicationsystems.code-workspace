@@ -18,27 +18,30 @@
         {
             "path": "Lecture6-RS-485"
         },
-		{
+        {
             "path": "Lecture7-Bluetooth"
-        }
+        },
         {
             "path": "Final_Project-HomeAssistant"
+        },
+        {
+            "path": "components"
         }
     ],
     "settings": {
-		"C_Cpp.intelliSenseEngine": "default",
-		"idf.adapterTargetName": "esp32c3",
-		"idf.espIdfPathWin": "C:\\Users\\Philipp\\esp\\v5.3.3\\esp-idf",
-		"idf.pythonInstallPath": "C:\\Users\\Philipp\\.espressif\\tools\\idf-python\\3.11.2\\python.exe",
-		"idf.openOcdConfigs": [
-			"board/esp32c3-builtin.cfg"
-		],
-		"idf.customExtraVars": {
-			"IDF_TARGET": "esp32c3"
-		}
-		"idf.flashType": "UART",
-		"idf.portWin": "COM3",
-		"idf.toolsPathWin": "C:\\Users\\Philipp\\.espressif",
+        "C_Cpp.intelliSenseEngine": "default",
+        "idf.adapterTargetName": "esp32c3",
+        "idf.espIdfPathWin": "C:\\Users\\Philipp\\esp\\v5.3.3\\esp-idf",
+        "idf.pythonInstallPath": "C:\\Users\\Philipp\\.espressif\\tools\\idf-python\\3.11.2\\python.exe",
+        "idf.openOcdConfigs": [
+            "board/esp32c3-builtin.cfg"
+        ],
+        "idf.customExtraVars": {
+            "IDF_TARGET": "esp32c3"
+        }
+        "idf.flashType": "UART",
+        "idf.portWin": "COM3",
+        "idf.toolsPathWin": "C:\\Users\\Philipp\\.espressif",
         "files.associations": {
             "sdkconfig.h": "c",
             "esp_random.h": "c",

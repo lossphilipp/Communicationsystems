@@ -41,31 +41,20 @@ void button_task(void *arguments) {
 
     while (true) {
         if (xQueueReceive(button_queue, &event, portMAX_DELAY)) {
-            const char *button_name;
-            if (event.gpio_num == BUTTON_GPIO_LEFT) {
-                button_name = "LEFT";
-            } else if (event.gpio_num == BUTTON_GPIO_RIGHT) {
-                button_name = "RIGHT";
+            char topic[64];
+            char payload[128];
+            if (event.gpio_num == BUTTON_GPIO) {
+                strcpy(topic, "button");
             } else {
                 ESP_LOGW("BUTTON_TASK", "Unknown GPIO: %d", event.gpio_num);
-                button_name = "UNKNOWN";
             }
 
-            ESP_LOGI("BUTTON_TASK", "Button event received:\nGPIO=%d (%s), Event=%s, Timestamp=%llu", 
-                event.gpio_num, button_name, event.event == 0 ? "pressed" : "released", event.timestamp
-            );
+            snprintf(payload, sizeof(payload),
+                "{\"event\":\"%s\",\"timestamp\":%llu}",
+                event.event == BUTTON_PRESSED ? "pressed" : "released",
+                event.timestamp);
 
-            uint8_t buf[10];
-            size_t packet_size;
-            build_packet(event.gpio_num, event.event, event.timestamp, buf, &packet_size);
-
-            #if CONFIG_TRANSPORT_UDP
-            packetsender_sendUDP(CONFIG_IPV4_ADDR, CONFIG_PORT, (uint8_t*)buf, packet_size);
-            #elif CONFIG_TRANSPORT_TCP
-            packetsender_sendTCP(CONFIG_IPV4_ADDR, CONFIG_PORT, (uint8_t*)buf, packet_size);
-            #elif CONFIG_TRANSPORT_MQTT
-            sendpacket_sendMQTT((uint8_t*)buf, packet_size);
-            #endif
+            mqtt_sendpayload(topic, (uint8_t*)payload, strlen(payload));
         }
     }
 }

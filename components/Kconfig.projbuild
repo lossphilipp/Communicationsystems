@@ -179,25 +179,39 @@ menu "HomeAssistant Configuration"
             string "MQTT Broker URL"
             default "mqtt://test.mosquitto.org"
             help
-            URL of the MQTT Broker used
+                URL of the MQTT Broker used
             
         config MQTT_BROKER_USERNAME
             string "MQTT user name"
             default ""
             help
-            User name for MQTT broker login
+                User name for MQTT broker login
 
         config MQTT_BROKER_PASSWORD
             string "MQTT password"
             default ""
             help
-            Password for MQTT broker login
+                Password for MQTT broker login
+
+        config USE_DEFAULT_TOPIC
+            bool "Use default topic"
+            default n
+            help
+                If a default dopic for all the the messages should be used.
             
         config MQTT_TOPIC
             string "MQTT Topic"
+            depends on USE_DEFAULT_TOPIC
             default "ESP32/test"
             help
-            MQTT Topic used to send the data
+                MQTT Topic used to send the data
+
+        config MQTT_TOPIC_PREFIX
+            string "MQTT Topic Prefix"
+            depends on !USE_DEFAULT_TOPIC
+            default "ESP32/test"
+            help
+                If not empty, this prefix is added to the topic of each message.
     endmenu
 
 endmenu

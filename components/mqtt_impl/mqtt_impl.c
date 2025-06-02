@@ -71,21 +71,45 @@ void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event
 }
 
 void mqtt_init() {
-	const esp_mqtt_client_config_t config = {
-	    .broker.address.uri = CONFIG_MQTT_BROKER_URL,
-		.credentials.username = CONFIG_MQTT_BROKER_USERNAME,
-		.credentials.authentication.password = CONFIG_MQTT_BROKER_PASSWORD,
-	};
+    const esp_mqtt_client_config_t config = {
+        .broker.address.uri = CONFIG_MQTT_BROKER_URL,
+        .credentials.username = CONFIG_MQTT_BROKER_USERNAME,
+        .credentials.authentication.password = CONFIG_MQTT_BROKER_PASSWORD,
+    };
     esp_mqtt_client_handle_t client = esp_mqtt_client_init(&config);
     // The last argument may be used to pass data to the event handler, in this example mqtt_event_handler
     esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
     esp_mqtt_client_start(client);
 }
 
-void sendpacket_sendMQTT(uint8_t* payload, uint16_t payloadLen) {
-	if (gClient == NULL) {
-		return;
-	}
-	int msgId = esp_mqtt_client_publish(gClient, CONFIG_MQTT_TOPIC, (char*)payload, payloadLen, 1, 0);
-	ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msgId);
+#if USE_DEFAULT_TOPIC
+void mqtt_sendpayload(uint8_t* payload, uint16_t payloadLen) {
+    if (gClient == NULL) {
+        return;
+    }
+    int msgId = esp_mqtt_client_publish(gClient, CONFIG_MQTT_TOPIC, (char*)payload, payloadLen, 1, 0);
+    ESP_LOGI(TAG, "sent publish successful\n msg_id: %d", msgId);
 }
+#else
+void mqtt_sendpayload(const char* topic, uint8_t* payload, uint16_t payloadLen) {
+    if (topic == NULL || gClient == NULL) {
+        return;
+    }
+
+    // Check if prefix is set and concatenate if needed
+    const char* prefix = CONFIG_MQTT_TOPIC_PREFIX;
+    char full_topic[256];
+    if (prefix[0] != '\0') {
+        // Ensure no double slash
+        if (prefix[strlen(prefix) - 1] == '/' || topic[0] == '/') {
+            snprintf(full_topic, sizeof(full_topic), "%s%s", prefix, topic);
+        } else {
+            snprintf(full_topic, sizeof(full_topic), "%s/%s", prefix, topic);
+        }
+        topic = full_topic;
+    }
+
+    int msgId = esp_mqtt_client_publish(gClient, topic, (char*)payload, payloadLen, 1, 0);
+    ESP_LOGI(TAG, "sent publish successful\n topic: %s\n msg_id: %d", topic, msgId);
+}
+#endif

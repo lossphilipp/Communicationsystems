@@ -2,85 +2,112 @@ menu "HomeAssistant Configuration"
     orsource "$IDF_PATH/examples/common_components/env_caps/$IDF_TARGET/Kconfig.env_caps"
     
     menu "LED Configuration"
-    choice BLINK_LED
-        prompt "Blink LED type"
-        default BLINK_LED_GPIO
-        help
-            Select the LED type. A normal level controlled LED or an addressable LED strip.
-            The default selection is based on the Espressif DevKit boards.
-            You can change the default selection according to your board.
+        choice BLINK_LED
+            prompt "Blink LED type"
+            default BLINK_LED_GPIO
+            help
+                Select the LED type. A normal level controlled LED or an addressable LED strip.
+                The default selection is based on the Espressif DevKit boards.
+                You can change the default selection according to your board.
 
-        config BLINK_LED_GPIO
-            bool "GPIO"
-        config BLINK_LED_STRIP
-            bool "LED strip"
-    endchoice
+            config BLINK_LED_GPIO
+                bool "GPIO"
+            config BLINK_LED_STRIP
+                bool "LED strip"
+        endchoice
 
-    choice BLINK_LED_STRIP_BACKEND
-        depends on BLINK_LED_STRIP
-        prompt "LED strip backend peripheral"
-        default BLINK_LED_STRIP_BACKEND_RMT if SOC_RMT_SUPPORTED
-        default BLINK_LED_STRIP_BACKEND_SPI
-        help
-            Select the backend peripheral to drive the LED strip.
+        choice BLINK_LED_STRIP_BACKEND
+            depends on BLINK_LED_STRIP
+            prompt "LED strip backend peripheral"
+            default BLINK_LED_STRIP_BACKEND_RMT if SOC_RMT_SUPPORTED
+            default BLINK_LED_STRIP_BACKEND_SPI
+            help
+                Select the backend peripheral to drive the LED strip.
 
-        config BLINK_LED_STRIP_BACKEND_RMT
-            depends on SOC_RMT_SUPPORTED
-            bool "RMT"
-        config BLINK_LED_STRIP_BACKEND_SPI
-            bool "SPI"
-    endchoice
+            config BLINK_LED_STRIP_BACKEND_RMT
+                depends on SOC_RMT_SUPPORTED
+                bool "RMT"
+            config BLINK_LED_STRIP_BACKEND_SPI
+                bool "SPI"
+        endchoice
 
-    config BLINK_GPIO
-        int "Blink GPIO number"
-        range ENV_GPIO_RANGE_MIN ENV_GPIO_OUT_RANGE_MAX
-        default 8
-        help
-            GPIO number (IOxx) to blink on and off the LED.
-            Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to blink.
+        config BLINK_GPIO
+            int "Blink GPIO number"
+            range ENV_GPIO_RANGE_MIN ENV_GPIO_OUT_RANGE_MAX
+            default 8
+            help
+                GPIO number (IOxx) to blink on and off the LED.
+                Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to blink.
 
-    config BLINK_PERIOD
-        int "Blink period in ms"
-        range 10 3600000
-        default 1000
-        help
-            Define the blinking period in milliseconds.
-
+        config BLINK_PERIOD
+            int "Blink period in ms"
+            range 10 3600000
+            default 1000
+            help
+                Define the blinking period in milliseconds.
     endmenu
 
     menu "Button Configuration"
-    config POTENTIOMETER_ACTIVE
-        bool "Potentiometer Active"
-        default n
-        help
-            If the potentiometer is active. This blocks the right button, since the GPIO is used otherwise.
+        config POTENTIOMETER_ACTIVE
+            bool "Potentiometer Active"
+            default n
+            help
+                If the potentiometer is active. This blocks the right button, since the GPIO is used otherwise.
 
-    config BUTTON_GPIO
-        int "Button GPIO"
-        depends on POTENTIOMETER_ACTIVE
-        default 9
-        help
-            GPIO the Button is connected to. In the book it is 6, the book development board uses 9.
+        config BUTTON_GPIO
+            int "Button GPIO"
+            depends on POTENTIOMETER_ACTIVE
+            default 9
+            help
+                GPIO the Button is connected to. In the book it is 6, the book development board uses 9.
 
-    config BUTTON_GPIO_LEFT
-        int "Left Button GPIO"
-        depends on !POTENTIOMETER_ACTIVE
-        default 9
-        help
-            GPIO the Button is connected to. In the book it is 6, the book development board uses 9.
+        config BUTTON_GPIO_LEFT
+            int "Left Button GPIO"
+            depends on !POTENTIOMETER_ACTIVE
+            default 9
+            help
+                GPIO the Button is connected to. In the book it is 6, the book development board uses 9.
 
-    config BUTTON_GPIO_RIGHT
-        int "Right Button GPIO"
-        depends on !POTENTIOMETER_ACTIVE
-        default 2
-        help
-            GPIO the Button is connected to. The book development board uses 2.
+        config BUTTON_GPIO_RIGHT
+            int "Right Button GPIO"
+            depends on !POTENTIOMETER_ACTIVE
+            default 2
+            help
+                GPIO the Button is connected to. The book development board uses 2.
 
-    config ENABLE_GPIO_PULLDOWN
-        bool "Enable GPIO PullDown"
-        default n
-        help
-            If the Buttons are configured to use PullDown. Uses PullUp otherwise.
+        config ENABLE_GPIO_PULLDOWN
+            bool "Enable GPIO PullDown"
+            default n
+            help
+                If the Buttons are configured to use PullDown. Uses PullUp otherwise.
+    endmenu
+
+    menu "Potentiometer Configuration"
+        choice POTENTIOMETER_ADC_FILTER
+            prompt "Potentiometer ADC filter"
+            default POTENTIOMETER_ADC_FILTER_IIR
+            help
+                Select the ADC filter to use for the potentiometer.
+                The IIR filter is the default and recommended for most applications.
+                The FIR filters are useful for applications that require a specific response time.
+
+            config POTENTIOMETER_ADC_FILTER_NONE
+                bool "Use no Filter"
+                help
+                    Use no Filter for the ADC values.
+            config POTENTIOMETER_ADC_FILTER_FIR_2
+                bool "Use FIR Filter order 2"
+                help
+                    Use FIR Filter order 2 with parameters ( 0.5, 0.5 )
+            config POTENTIOMETER_ADC_FILTER_FIR_10
+                bool "Use FIR Filter order 10"
+                help
+                    Use IIR Filter order 10 with parameters (0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1)
+            config POTENTIOMETER_ADC_FILTER_IIR
+                bool "Use IIR Filter"
+                help
+                    Use IIR Filter with parameters (0.4142, 0.0, 0.2929, 0.2929, 0.0)
+        endchoice
     endmenu
 
     menu "WIFI Configuration"

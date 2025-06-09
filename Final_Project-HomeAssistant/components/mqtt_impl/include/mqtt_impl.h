@@ -9,7 +9,17 @@
 #define CONFIG_MQTT_TOPIC_PREFIX ""
 #endif
 
+typedef void (*mqtt_message_callback_t)(const char* topic, const char* payload);
+
+typedef struct {
+    char topic[64];
+    mqtt_message_callback_t callback;
+} mqtt_subscription_t;
+
 void mqtt_init(void);
+
+// ToDo: Implement in mqtt_impl.c
+// void mqtt_subscribe(const char* topic, mqtt_message_callback_t callback);
 
 #if USE_DEFAULT_TOPIC
 void mqtt_sendpayload(uint8_t* payload, uint16_t payloadLen);

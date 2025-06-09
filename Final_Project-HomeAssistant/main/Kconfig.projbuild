@@ -170,37 +170,6 @@ menu "HomeAssistant Configuration"
         endchoice
     endmenu
 
-    menu "Remote Connection Configuration"
-        config IPV4_ADDR
-            string "IPV4 Address"
-            default "127.0.0.1"
-            help
-                IPV4 address to which the client example will send data.
-
-        config PORT
-            int "Port"
-            range 0 65535
-            default 15651
-            help
-                The remote port to which the client example will send data.
-
-        choice TRANSPORT_LAYER
-            prompt "Transport Layer"
-            default TRANSPORT_MQTT
-            help
-                Selects the transport layer protocol.
-
-            config TRANSPORT_MQTT
-                bool "MQTT"
-
-            config TRANSPORT_UDP
-                bool "UDP"
-
-            config TRANSPORT_TCP
-                bool "TCP"
-        endchoice
-    endmenu
-
     menu "MQTT Configuration"
         config MQTT_BROKER_URL
             string "MQTT Broker URL"
@@ -239,6 +208,15 @@ menu "HomeAssistant Configuration"
             default "ESP32/test"
             help
                 If not empty, this prefix is added to the topic of each message.
+
+        config MQTT_MAX_SUBSCRIPTIONS
+            int "Maximum number of MQTT subscriptions"
+            range 1 32
+            default 8
+            help
+                Maximum number of MQTT subscriptions that can be created.
+                This is useful to limit the memory usage of the MQTT client.
+                The default value is 8, which should be sufficient for most applications.
     endmenu
 
 endmenu

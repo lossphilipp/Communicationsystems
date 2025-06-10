@@ -1,6 +1,7 @@
 #include "mqtt_impl.h"
 
 static esp_mqtt_client_handle_t gClient = NULL;
+uint8_t current_subscriptions = 0;
 
 static const char *TAG = "MQTT";
 
@@ -33,8 +34,6 @@ void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-        msgId = esp_mqtt_client_subscribe(gClient, "poxi/brightness", 0);
-        ESP_LOGI(TAG, "sent subscribe, msg_id=%d", msgId);
         break;
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -82,6 +81,31 @@ void mqtt_init() {
     esp_mqtt_client_start(client);
 }
 
+void mqtt_subscribe(const char* topic) {
+    if (gClient == NULL || topic == NULL) {
+        ESP_LOGE(TAG, "MQTT client not initialized or topic is NULL");
+        return;
+    }
+
+    if (current_subscriptions >= CONFIG_MQTT_MAX_SUBSCRIPTIONS) {
+        ESP_LOGE(TAG, "Maximum number of MQTT subscriptions reached: %d", CONFIG_MQTT_MAX_SUBSCRIPTIONS);
+        return;
+    }
+    current_subscriptions++;
+
+    int msgId = esp_mqtt_client_subscribe(gClient, topic, 0);
+    if (msgId < 0) {
+        ESP_LOGE(TAG, "Failed to subscribe to topic: %s", topic);
+        return;
+    }
+    ESP_LOGI(TAG, "Subscribed to topic: %s, msg_id=%d", topic, msgId);
+}
+
+void mqtt_subscribe_callback(const char* topic, mqtt_message_callback_t callback) {
+    mqtt_subscribe(topic);
+    esp_mqtt_client_register_event(gClient, MQTT_EVENT_DATA, callback, NULL);
+}
+
 #if USE_DEFAULT_TOPIC
 void mqtt_sendpayload(uint8_t* payload, uint16_t payloadLen) {
     if (gClient == NULL) {
@@ -93,6 +117,7 @@ void mqtt_sendpayload(uint8_t* payload, uint16_t payloadLen) {
 #else
 void mqtt_sendpayload(const char* topic, uint8_t* payload, uint16_t payloadLen) {
     if (topic == NULL || gClient == NULL) {
+        ESP_LOGE(TAG, "MQTT client not initialized or topic is NULL");
         return;
     }
 

@@ -167,8 +167,7 @@ void app_main(void)
     xTaskCreate(button_task, "button_task", TASKS_STACKSIZE, NULL, TASKS_PRIORITY, &gButtonTask_handle);
     xTaskCreate(potentiometer_task, "potentiometer_task", TASKS_STACKSIZE, NULL, TASKS_PRIORITY, &gPotentiometerTask_handle);
 
-    // ToDo: Implement in mqtt_impl
-    // mqtt_subscribe(MQTT_TOPIC_LED_SET, mqtt_led_control_callback);
+    mqtt_subscribe_callback(MQTT_TOPIC_LED_SET, mqtt_led_control_callback);
 
     ESP_LOGI("CONFIGURATION", "Tasks created, start program...");
 

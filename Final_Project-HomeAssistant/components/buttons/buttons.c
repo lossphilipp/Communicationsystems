@@ -65,7 +65,7 @@ void buttons_init() {
 
     create_buttonQueue();
 
-    ESP_LOGI(TAG, "Buttons configured"); 
+    ESP_LOGI(TAG, "Buttons configured\n"); 
 }
 
 void buttons_cleanup() {

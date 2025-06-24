@@ -19,7 +19,7 @@ esp_err_t staticwifi_init() {
     gpNetIF = wifi_start();
 
     ESP_ERROR_CHECK(esp_register_shutdown_handler(&staticwifi_shutdown));
-
+    ESP_LOGI(TAG, "Static WIFI initialized\n");
     return ESP_OK;
 }
 

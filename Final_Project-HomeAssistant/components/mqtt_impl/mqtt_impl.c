@@ -29,8 +29,7 @@ void log_error_if_nonzero(const char *message, int error_code) {
 void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {
     esp_mqtt_event_handle_t event = event_data;
     gClient = event->client;
-    ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%ld, client=%p", base, event_id, gClient); //", , );
-    int msgId;
+    ESP_LOGD(TAG, "Event dispatched from event loop\nbase=%s, event_id=%ld, client=%p", base, event_id, gClient);
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
@@ -112,7 +111,7 @@ void mqtt_sendpayload(uint8_t* payload, uint16_t payloadLen) {
         return;
     }
     int msgId = esp_mqtt_client_publish(gClient, CONFIG_MQTT_TOPIC, (char*)payload, payloadLen, 1, 0);
-    ESP_LOGI(TAG, "sent publish successful\n msg_id: %d", msgId);
+    ESP_LOGI(TAG, "Sent publish successful\n msg_id: %d", msgId);
 }
 #else
 void mqtt_sendpayload(const char* topic, uint8_t* payload, uint16_t payloadLen) {
@@ -135,6 +134,6 @@ void mqtt_sendpayload(const char* topic, uint8_t* payload, uint16_t payloadLen) 
     }
 
     int msgId = esp_mqtt_client_publish(gClient, topic, (char*)payload, payloadLen, 1, 0);
-    ESP_LOGI(TAG, "sent publish successful\n topic: %s\n msg_id: %d", topic, msgId);
+    ESP_LOGI(TAG, "Sent publish successful\n topic: %s\n payload: %.*s\n msg_id: %d\n", topic, payloadLen, payload, msgId);
 }
 #endif

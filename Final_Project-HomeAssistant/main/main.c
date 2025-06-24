@@ -15,7 +15,7 @@
 #include "buttons.h"
 #include "potentiometer.h"
 
-#define TASKS_STACKSIZE        2048
+#define TASKS_STACKSIZE        4096
 #define TASKS_PRIORITY            3
 
 #define MQTT_TOPIC_BUTTON           "button"

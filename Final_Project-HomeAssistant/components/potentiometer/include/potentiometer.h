@@ -25,7 +25,7 @@ typedef struct {
 } potentiometer_filtered_t;
 
 void potentiometer_init(void);
-int32_t potentiometer_read_mV(void);
+int potentiometer_read_mV(void);
 potentiometer_filtered_t potentiometer_read_filtered(void);
 uint8_t potentiometer_read_percentage(void);
 uint8_t potentiometer_read_uint8(void);

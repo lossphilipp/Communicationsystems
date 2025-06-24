@@ -39,21 +39,21 @@ void potentiometer_init() {
     pFIRFilter_order10 = firfilter_create(b10, 10);
     pIIRFilter = iirfilter_create(0.4142, 0.0, 0.2929, 0.2929, 0.0);
 
-    ESP_LOGI(TAG, "Potentiometer configured"); 
+    ESP_LOGI(TAG, "Potentiometer configured\n"); 
 }
 
-int32_t potentiometer_read_mV(){
-    int32_t rawValue, voltage_mV;
+int potentiometer_read_mV(){
+    int rawValue, voltage_mV;
     adc_oneshot_read(adcHandle, ADC_CHANNEL_2, &rawValue);
     adc_cali_raw_to_voltage(calHandle, rawValue, &voltage_mV);
 
-    ESP_LOGD(TAG, "Raw: %" PRId32 ", Voltage: %" PRId32 " mV", rawValue, voltage_mV);
+    ESP_LOGD(TAG, "Raw: %d, Voltage: %d mV", rawValue, voltage_mV);
     return voltage_mV;
 }
 
 potentiometer_filtered_t potentiometer_read_filtered(){
     potentiometer_filtered_t filter;
-    int32_t voltage_mV = potentiometer_read_mV();
+    int voltage_mV = potentiometer_read_mV();
 
     filter.firValue_2 = filter_filterValue(pFIRFilter_order2, voltage_mV);
     filter.firValue_10 = filter_filterValue(pFIRFilter_order10, voltage_mV);

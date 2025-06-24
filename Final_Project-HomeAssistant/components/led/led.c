@@ -33,7 +33,7 @@ void fill_led_strip_with_color(color_t color) {
 }
 
 void led_init(void) {
-    ESP_LOGI(TAG, "example configured to blink addressable led!");
+    ESP_LOGI(TAG, "project configured with addressable led strip!\n");
     /* LED strip initialization with the GPIO and pixels number*/
     led_strip_config_t strip_config = {
         .strip_gpio_num = CONFIG_BLINK_GPIO,
@@ -63,7 +63,7 @@ void led_init(void) {
 #elif CONFIG_BLINK_LED_GPIO
 
 void led_init(void) {
-    ESP_LOGI(TAG, "example configured to blink gpio led!");
+    ESP_LOGI(TAG, "project configured with gpio led!\n");
     gpio_reset_pin(CONFIG_BLINK_GPIO);
     /* Set the GPIO as a push/pull output */
     gpio_set_direction(CONFIG_BLINK_GPIO, GPIO_MODE_OUTPUT);

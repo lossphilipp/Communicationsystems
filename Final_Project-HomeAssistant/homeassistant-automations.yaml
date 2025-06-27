@@ -1,0 +1,35 @@
+- id: '1751058659502'
+  alias: Toggle ESP32 LED on Button Press
+  initial_state: false
+  triggers:
+  - trigger: state
+    entity_id:
+    - event.esp32_button
+    attribute: event_type
+    to: press
+  conditions: []
+  actions:
+  - action: light.toggle
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - light.esp32_light
+  mode: single
+- id: '1751058733915'
+  alias: Set ESP32 LED Brightness from Potentiometer
+  initial_state: false
+  triggers:
+  - trigger: mqtt
+    topic: ESP32/potentiometer
+  conditions: []
+  actions:
+  - action: light.turn_on
+    metadata: {}
+    data:
+      brightness: >
+        {% set value = trigger.payload_json.value | int(0) %}
+        {{ value }}
+    target:
+      entity_id: light.esp32_light
+  mode: single

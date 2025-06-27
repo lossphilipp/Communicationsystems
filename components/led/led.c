@@ -9,15 +9,48 @@ const colorValues_t color_values[] = {
     [WHITE] = {10, 10, 10}
 };
 
-/* Private variables */
+current_led_state_t current_led_state = {
+    .color = {0, 0, 0},
+    .brightness = 255,
+    .state = false
+};
+
 #ifdef CONFIG_BLINK_LED_STRIP
-static led_strip_handle_t led_strip;
-#endif
+/* Private variables */
+led_strip_handle_t led_strip;
 
 /* Public functions */
-#ifdef CONFIG_BLINK_LED_STRIP
+void adjust_led_brightness(uint8_t brightness) {
+    ESP_LOGI(TAG, "Adjusting LED brightness to %d", brightness);
+    current_led_state.brightness = brightness;
+    fill_led_strip_with_colorValues(current_led_state.color);
+}
 
 void fill_led_strip(uint8_t r, uint8_t g, uint8_t b) {
+    if (led_strip == NULL) {
+        ESP_LOGE(TAG, "LED strip not initialized");
+        return;
+    }
+
+    if (!current_led_state.state)
+    {
+        ESP_LOGW(TAG, "LED strip is off, cannot fill with color");
+        return;
+    }
+
+    ESP_LOGV(TAG, "Original color: R=%d, G=%d, B=%d\n", r, g, b);
+
+    // Set current color to the new values
+    current_led_state.color.r = r;
+    current_led_state.color.g = g;
+    current_led_state.color.b = b;
+
+    // Adjust the color values based on the current brightness
+    r = (r * current_led_state.brightness) / 255;
+    g = (g * current_led_state.brightness) / 255;
+    b = (b * current_led_state.brightness) / 255;
+
+    ESP_LOGV(TAG, "Brightness adjusted color: R=%d, G=%d, B=%d\n", r, g, b);
     led_strip_clear(led_strip);
 
     for (uint8_t i = 0; i < 25; i++) {
@@ -27,17 +60,42 @@ void fill_led_strip(uint8_t r, uint8_t g, uint8_t b) {
     led_strip_refresh(led_strip);
 }
 
+void fill_led_strip_with_colorValues(colorValues_t colorValues) {
+    fill_led_strip(colorValues.r, colorValues.g, colorValues.b);
+}
+
 void fill_led_strip_with_color(color_t color) {
-    ESP_LOGV("LED_STRIP", "Color for filling LED strip is %d", color);
-    fill_led_strip(color_values[color].r, color_values[color].g, color_values[color].b);
+    ESP_LOGV(TAG, "Color for filling LED strip is %d", color);
+    fill_led_strip_with_colorValues(color_values[color]);
+}
+
+void toogle_led(bool state) {
+    if (led_strip == NULL) {
+        ESP_LOGE(TAG, "LED strip not initialized");
+        return;
+    }
+    ESP_LOGI(TAG, "Toggling LED state");
+
+    current_led_state.state = state;
+    if (state) {
+        ESP_LOGD(TAG, "Turning on LED strip");
+        fill_led_strip_with_colorValues(current_led_state.color);
+    } else {
+        ESP_LOGD(TAG, "Turning off LED strip");
+        led_strip_clear(led_strip);
+    }
+}
+
+current_led_state_t get_current_led_state(void) {
+    return current_led_state;
 }
 
 void led_init(void) {
     ESP_LOGI(TAG, "project configured with addressable led strip!");
     /* LED strip initialization with the GPIO and pixels number*/
     led_strip_config_t strip_config = {
-        .strip_gpio_num = CONFIG_BLINK_GPIO,
-        .max_leds = 1, // at least one LED on board
+        .strip_gpio_num = BLINK_GPIO,
+        .max_leds = 25,
     };
 #if CONFIG_BLINK_LED_STRIP_BACKEND_RMT
     led_strip_rmt_config_t rmt_config = {

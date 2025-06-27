@@ -1,9 +1,12 @@
 #include "mqtt_impl.h"
 
+static const char *TAG = "MQTT";
+
 static esp_mqtt_client_handle_t gClient = NULL;
 uint8_t current_subscriptions = 0;
 
-static const char *TAG = "MQTT";
+static topic_callback_t topic_callbacks[CONFIG_MQTT_MAX_SUBSCRIPTIONS];
+static uint8_t callback_count = 0;
 
 static void log_error_if_nonzero(const char *message, int error_code);
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
@@ -53,8 +56,25 @@ void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event
         break;
     case MQTT_EVENT_DATA:
         ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-        printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
-        printf("DATA=%.*s\r\n", event->data_len, event->data);
+        ESP_LOGD(TAG, "GOT EVENT\n\tTOPIC: %.*s\n\tDATA: %.*s", event->topic_len, event->topic, event->data_len, event->data);
+        
+        // Handle topic-specific callbacks
+        for (int i = 0; i < callback_count; i++) {
+            if (strncmp(topic_callbacks[i].topic, event->topic, event->topic_len) == 0 && 
+                strlen(topic_callbacks[i].topic) == event->topic_len) {
+                if (topic_callbacks[i].callback) {
+                    // Create null-terminated strings for the callback
+                    char topic_str[128];
+                    char data_str[256];
+                    
+                    snprintf(topic_str, sizeof(topic_str), "%.*s", event->topic_len, event->topic);
+                    snprintf(data_str, sizeof(data_str), "%.*s", event->data_len, event->data);
+                    
+                    topic_callbacks[i].callback(topic_str, data_str);
+                }
+                break;
+            }
+        }
         break;
     case MQTT_EVENT_ERROR:
         ESP_LOGE(TAG, "MQTT_EVENT_ERROR");
@@ -94,6 +114,26 @@ esp_err_t mqtt_init() {
     }
 }
 
+void mqtt_get_full_topic(const char* topic, char* out_buf, size_t buf_size) {
+    if (topic == NULL) {
+        ESP_LOGE(TAG, "Topic is NULL");
+        if (out_buf && buf_size > 0) {
+            out_buf[0] = '\0';
+        }
+        return;
+    }
+    const char* prefix = CONFIG_MQTT_TOPIC_PREFIX;
+    if (prefix[0] != '\0') {
+        if (prefix[strlen(prefix) - 1] == '/' || topic[0] == '/') {
+            snprintf(out_buf, buf_size, "%s%s", prefix, topic);
+        } else {
+            snprintf(out_buf, buf_size, "%s/%s", prefix, topic);
+        }
+    } else {
+        snprintf(out_buf, buf_size, "%s", topic);
+    }
+}
+
 void mqtt_subscribe(const char* topic) {
     if (gClient == NULL || topic == NULL) {
         ESP_LOGE(TAG, "MQTT client not initialized or topic is NULL");
@@ -106,17 +146,41 @@ void mqtt_subscribe(const char* topic) {
     }
     current_subscriptions++;
 
-    int msgId = esp_mqtt_client_subscribe(gClient, topic, 0);
+    char full_topic[128];
+    mqtt_get_full_topic(topic, full_topic, sizeof(full_topic));
+
+    int msgId = esp_mqtt_client_subscribe(gClient, full_topic, 0);
     if (msgId < 0) {
-        ESP_LOGE(TAG, "Failed to subscribe to topic: %s", topic);
+        ESP_LOGE(TAG, "Failed to subscribe to topic: %s", full_topic);
         return;
     }
-    ESP_LOGI(TAG, "Subscribed to topic: %s, msg_id=%d", topic, msgId);
+    ESP_LOGI(TAG, "Subscribed to topic: %s, msg_id=%d", full_topic, msgId);
 }
 
 void mqtt_subscribe_callback(const char* topic, mqtt_message_callback_t callback) {
+    if (topic == NULL || callback == NULL) {
+        ESP_LOGE(TAG, "Topic or callback is NULL");
+        return;
+    }
+    
+    if (callback_count >= CONFIG_MQTT_MAX_SUBSCRIPTIONS) {
+        ESP_LOGE(TAG, "Maximum number of topic callbacks reached: %d", CONFIG_MQTT_MAX_SUBSCRIPTIONS);
+        return;
+    }
+    
+    // Subscribe to the topic
     mqtt_subscribe(topic);
-    esp_mqtt_client_register_event(gClient, MQTT_EVENT_DATA, callback, NULL);
+    
+    // Store the callback mapping
+    char full_topic[128];
+    mqtt_get_full_topic(topic, full_topic, sizeof(full_topic));
+    
+    strncpy(topic_callbacks[callback_count].topic, full_topic, sizeof(topic_callbacks[callback_count].topic) - 1);
+    topic_callbacks[callback_count].topic[sizeof(topic_callbacks[callback_count].topic) - 1] = '\0';
+    topic_callbacks[callback_count].callback = callback;
+    callback_count++;
+    
+    ESP_LOGI(TAG, "Registered callback for topic: %s", full_topic);
 }
 
 #if USE_DEFAULT_TOPIC
@@ -125,7 +189,7 @@ void mqtt_sendpayload(uint8_t* payload, uint16_t payloadLen) {
         return;
     }
     int msgId = esp_mqtt_client_publish(gClient, CONFIG_MQTT_TOPIC, (char*)payload, payloadLen, 1, 0);
-    ESP_LOGI(TAG, "Sent publish successful\n msg_id: %d", msgId);
+    ESP_LOGD(TAG, "Sent publish successful\n\payload: %.*s\n\tmsg_id: %d", payloadLen, payload, msgId);
 }
 #else
 void mqtt_sendpayload(const char* topic, uint8_t* payload, uint16_t payloadLen) {
@@ -134,20 +198,10 @@ void mqtt_sendpayload(const char* topic, uint8_t* payload, uint16_t payloadLen) 
         return;
     }
 
-    // Check if prefix is set and concatenate if needed
-    const char* prefix = CONFIG_MQTT_TOPIC_PREFIX;
-    char full_topic[256];
-    if (prefix[0] != '\0') {
-        // Ensure no double slash
-        if (prefix[strlen(prefix) - 1] == '/' || topic[0] == '/') {
-            snprintf(full_topic, sizeof(full_topic), "%s%s", prefix, topic);
-        } else {
-            snprintf(full_topic, sizeof(full_topic), "%s/%s", prefix, topic);
-        }
-        topic = full_topic;
-    }
+    char full_topic[128];
+    mqtt_get_full_topic(topic, full_topic, sizeof(full_topic));
 
-    int msgId = esp_mqtt_client_publish(gClient, topic, (char*)payload, payloadLen, 1, 0);
-    ESP_LOGI(TAG, "Sent publish successful\n topic: %s\n payload: %.*s\n msg_id: %d\n", topic, payloadLen, payload, msgId);
+    int msgId = esp_mqtt_client_publish(gClient, full_topic, (char*)payload, payloadLen, 1, 0);
+    ESP_LOGD(TAG, "Sent publish successful\n\ttopic: %s\n\tpayload: %.*s\n\tmsg_id: %d", full_topic, payloadLen, payload, msgId);
 }
 #endif

@@ -1,24 +1,39 @@
 mqtt:
-  event:
-    - unique_id: esp32_button
+  - event:
+      unique_id: esp32_button
       name: "ESP32 Button"
       state_topic: "ESP32/button"
       event_types:
         - press
         - release
       device_class: "button"
-      value_template: "{{ value_json.event }}"
+      device:
+        identifiers: ["esp32_home_assistant"]
+        name: "ESP32 Home Assistant Device"
+        manufacturer: "lossphilipp"
+        model: "ESP32"
 
-  sensor:
-    - unique_id: esp32_potentiometer
+  - sensor:
+      unique_id: esp32_potentiometer
       name: "ESP32 Potentiometer"
       state_topic: "ESP32/potentiometer"
       value_template: "{{ value_json.value }}"
+      device:
+        identifiers: ["esp32_home_assistant"]
+        name: "ESP32 Home Assistant Device"
+        manufacturer: "lossphilipp"
+        model: "ESP32"
 
-  light:
-    - schema: json
+  - light:
+      schema: json
       unique_id: esp32_light
       name: "ESP32 Light"
       state_topic: "ESP32/led/state"
       command_topic: "ESP32/led/set"
       supported_color_modes: ["rgb"]
+      brightness : true
+      device:
+        identifiers: ["esp32_home_assistant"]
+        name: "ESP32 Home Assistant Device"
+        manufacturer: "lossphilipp"
+        model: "ESP32"

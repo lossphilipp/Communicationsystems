@@ -92,13 +92,21 @@ menu "HomeAssistant Configuration"
                 The FIR filters are useful for applications that require a specific response time.
 
             config POTENTIOMETER_ADC_FILTER_NONE
-                bool "None"
+                bool "Use no Filter"
+                help
+                    Use no Filter for the ADC values.
             config POTENTIOMETER_ADC_FILTER_FIR_2
-                bool "FIR 2"
+                bool "Use FIR Filter order 2"
+                help
+                    Use FIR Filter order 2 with parameters ( 0.5, 0.5 )
             config POTENTIOMETER_ADC_FILTER_FIR_10
-                bool "FIR 10"
+                bool "Use FIR Filter order 10"
+                help
+                    Use IIR Filter order 10 with parameters (0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1)
             config POTENTIOMETER_ADC_FILTER_IIR
-                bool "IIR"
+                bool "Use IIR Filter"
+                help
+                    Use IIR Filter with parameters (0.4142, 0.0, 0.2929, 0.2929, 0.0)
         endchoice
     endmenu
 

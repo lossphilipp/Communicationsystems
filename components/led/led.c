@@ -33,7 +33,7 @@ void fill_led_strip_with_color(color_t color) {
 }
 
 void led_init(void) {
-    ESP_LOGI(TAG, "project configured with addressable led strip!\n");
+    ESP_LOGI(TAG, "project configured with addressable led strip!");
     /* LED strip initialization with the GPIO and pixels number*/
     led_strip_config_t strip_config = {
         .strip_gpio_num = CONFIG_BLINK_GPIO,
@@ -45,28 +45,32 @@ void led_init(void) {
         .flags.with_dma = false,
     };
     ESP_ERROR_CHECK(
-        led_strip_new_rmt_device(&strip_config, &rmt_config, &led_strip));
+        led_strip_new_rmt_device(&strip_config, &rmt_config, &led_strip)
+    );
 #elif CONFIG_BLINK_LED_STRIP_BACKEND_SPI
     led_strip_spi_config_t spi_config = {
         .spi_bus = SPI2_HOST,
         .flags.with_dma = true,
     };
     ESP_ERROR_CHECK(
-        led_strip_new_spi_device(&strip_config, &spi_config, &led_strip));
+        led_strip_new_spi_device(&strip_config, &spi_config, &led_strip)
+    );
 #else
 #error "unsupported LED strip backend"
 #endif
     /* Set all LED off to clear all pixels */
     led_strip_clear(led_strip);
+    ESP_LOGI(TAG, "LEDs initialized\n");
 }
 
 #elif CONFIG_BLINK_LED_GPIO
 
 void led_init(void) {
-    ESP_LOGI(TAG, "project configured with gpio led!\n");
+    ESP_LOGI(TAG, "project configured with gpio led!");
     gpio_reset_pin(CONFIG_BLINK_GPIO);
     /* Set the GPIO as a push/pull output */
     gpio_set_direction(CONFIG_BLINK_GPIO, GPIO_MODE_OUTPUT);
+    ESP_LOGI(TAG, "LEDs initialized\n");
 }
 
 #else

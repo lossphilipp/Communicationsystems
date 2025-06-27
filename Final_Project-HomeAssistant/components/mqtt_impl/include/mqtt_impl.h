@@ -4,6 +4,8 @@
 #include <inttypes.h>
 #include "esp_log.h"
 #include "mqtt_client.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 #ifndef CONFIG_MQTT_TOPIC_PREFIX
 #define CONFIG_MQTT_TOPIC_PREFIX ""
@@ -11,7 +13,7 @@
 
 typedef void (*mqtt_message_callback_t)(const char* topic, const char* payload);
 
-void mqtt_init(void);
+esp_err_t mqtt_init(void);
 void mqtt_subscribe(const char* topic);
 void mqtt_subscribe_callback(const char* topic, mqtt_message_callback_t callback);
 

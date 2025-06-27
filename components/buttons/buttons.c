@@ -33,8 +33,10 @@ void buttons_init() {
     };
     #if CONFIG_POTENTIOMETER_ACTIVE
         gpioConfigIn.pin_bit_mask = (1 << BUTTON_GPIO);
+        ESP_LOGD(TAG, "Configured for single button on GPIO %d", BUTTON_GPIO);
     #else
         gpioConfigIn.pin_bit_mask = (1 << BUTTON_GPIO_LEFT) | (1 << BUTTON_GPIO_RIGHT);
+        ESP_LOGD(TAG, "Configured for both buttons on GPIO %d and %d", BUTTON_GPIO_LEFT, BUTTON_GPIO_RIGHT);
     #endif
 
     #if CONFIG_ENABLE_GPIO_PULLDOWN
@@ -65,7 +67,7 @@ void buttons_init() {
 
     create_buttonQueue();
 
-    ESP_LOGI(TAG, "Buttons configured\n"); 
+    ESP_LOGI(TAG, "Buttons initialized\n"); 
 }
 
 void buttons_cleanup() {

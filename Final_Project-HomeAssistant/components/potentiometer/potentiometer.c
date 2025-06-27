@@ -24,7 +24,7 @@ void potentiometer_init() {
     };
     ESP_ERROR_CHECK(adc_oneshot_config_channel(adcHandle, ADC_CHANNEL_2, &channelConfig));
 
-    ESP_LOGD(TAG, "calibration scheme version is %s", "Curve Fitting");
+    // calibration scheme version is Curve Fitting
     adc_cali_curve_fitting_config_t calConfig = {
         .unit_id = ADC_UNIT_1,
         .atten = ADC_ATTEN_DB_12,
@@ -33,13 +33,14 @@ void potentiometer_init() {
     ESP_ERROR_CHECK(adc_cali_create_scheme_curve_fitting(&calConfig, &calHandle));
 
     // Create Filters
+    ESP_LOGD(TAG, "Creating filters");
     float b2[2] = { 0.5, 0.5 };
     pFIRFilter_order2 = firfilter_create(b2, 2);
     float b10[10] = { 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 };
     pFIRFilter_order10 = firfilter_create(b10, 10);
     pIIRFilter = iirfilter_create(0.4142, 0.0, 0.2929, 0.2929, 0.0);
 
-    ESP_LOGI(TAG, "Potentiometer configured\n"); 
+    ESP_LOGI(TAG, "Potentiometer initialized\n"); 
 }
 
 int potentiometer_read_mV(){

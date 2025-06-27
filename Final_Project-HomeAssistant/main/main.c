@@ -158,14 +158,14 @@ void app_main(void)
 {
     init_nvs();
 
+    staticwifi_init();
     led_init();
     buttons_init();
     potentiometer_init();
-    staticwifi_init();
     mqtt_init();
 
     xTaskCreate(button_task, "button_task", TASKS_STACKSIZE, NULL, TASKS_PRIORITY, &gButtonTask_handle);
-    xTaskCreate(potentiometer_task, "potentiometer_task", TASKS_STACKSIZE, NULL, TASKS_PRIORITY, &gPotentiometerTask_handle);
+    //xTaskCreate(potentiometer_task, "potentiometer_task", TASKS_STACKSIZE, NULL, TASKS_PRIORITY, &gPotentiometerTask_handle);
 
     mqtt_subscribe_callback(MQTT_TOPIC_LED_SET, mqtt_led_control_callback);
 

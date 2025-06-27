@@ -1,9 +1,12 @@
 #include "wifi_station.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 static const char *TAG = "WIFI_STATION";
 
 static esp_ip4_addr_t gIPAddr;
 static esp_netif_t *gpNetIF = NULL;
+static TaskHandle_t wifi_notify_task = NULL;
 
 static void staticwifi_shutdown(void);
 static esp_netif_t *wifi_start(void);
@@ -16,9 +19,17 @@ esp_err_t staticwifi_init() {
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
+    wifi_notify_task = xTaskGetCurrentTaskHandle();
     gpNetIF = wifi_start();
-
     ESP_ERROR_CHECK(esp_register_shutdown_handler(&staticwifi_shutdown));
+
+    // Wait for IP (timeout 10 seconds)
+    uint32_t notified = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(10000));
+    if (notified == 0) {
+        ESP_LOGW(TAG, "WiFi connection timeout");
+        return ESP_FAIL;
+    }
+
     ESP_LOGI(TAG, "Static WIFI initialized\n");
     return ESP_OK;
 }
@@ -90,4 +101,7 @@ static void on_got_ip(void *arg, esp_event_base_t event_base, int32_t event_id, 
     ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
     ESP_LOGI(TAG, "Got IPv4 event: Interface \"%s\" address: " IPSTR, esp_netif_get_desc(event->esp_netif), IP2STR(&event->ip_info.ip));
     memcpy(&gIPAddr, &event->ip_info.ip, sizeof(gIPAddr));
+    if (wifi_notify_task) {
+        xTaskNotifyGive(wifi_notify_task);
+    }
 }

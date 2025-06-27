@@ -7,6 +7,7 @@ static const char *TAG = "MQTT";
 
 static void log_error_if_nonzero(const char *message, int error_code);
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
+static TaskHandle_t mqtt_notify_task = NULL;
 
 // ----- implementation -----
 
@@ -29,10 +30,13 @@ void log_error_if_nonzero(const char *message, int error_code) {
 void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {
     esp_mqtt_event_handle_t event = event_data;
     gClient = event->client;
-    ESP_LOGD(TAG, "Event dispatched from event loop\nbase=%s, event_id=%ld, client=%p", base, event_id, gClient); //", , );
+    ESP_LOGD(TAG, "Event dispatched from event loop\nbase=%s, event_id=%ld, client=%p", base, event_id, gClient);
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
+        if (mqtt_notify_task) {
+            xTaskNotifyGive(mqtt_notify_task);
+        }
         break;
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -68,7 +72,8 @@ void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event
     }
 }
 
-void mqtt_init() {
+esp_err_t mqtt_init() {
+    mqtt_notify_task = xTaskGetCurrentTaskHandle();
     const esp_mqtt_client_config_t config = {
         .broker.address.uri = CONFIG_MQTT_BROKER_URL,
         .credentials.username = CONFIG_MQTT_BROKER_USERNAME,
@@ -78,6 +83,15 @@ void mqtt_init() {
     // The last argument may be used to pass data to the event handler, in this example mqtt_event_handler
     esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
     esp_mqtt_client_start(client);
+    // Wait for connection (timeout 10 seconds)
+    uint32_t notified = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(10000));
+    if (notified == 0) {
+        ESP_LOGE(TAG, "MQTT connection timeout");
+        return ESP_FAIL;
+    } else {
+        ESP_LOGI(TAG, "MQTT client initialized and connected successfully\n");
+        return ESP_OK;
+    }
 }
 
 void mqtt_subscribe(const char* topic) {

@@ -29,11 +29,7 @@
         }
     ],
     "settings": {
-        "C_Cpp.intelliSenseEngine": "default",
-        "idf.adapterTargetName": "esp32c3",
-        "idf.espIdfPathWin": "C:\\Users\\phili\\esp\\v5.5\\esp-idf",
-        "idf.toolsPathWin": "C:\\Users\\phili\\.espressif",
-        "idf.pythonInstallPath": "C:\\Users\\phili\\.espressif\\tools\\idf-python\\3.11.2\\python.exe",
+        "idf.currentSetup": "C:\\esp\\v5.5.3\\esp-idf",
         "idf.openOcdConfigs": [
             "board/esp32c3-builtin.cfg"
         ],
